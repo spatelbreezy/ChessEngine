@@ -28,10 +28,30 @@ def main():
     gs = Engine.GameState()
     load_images()
     running = True
+    selected_sq = () #default is no selected square, stores a tuple (row,col)
+    player_clicks = [] #keeps track of clicks, 2 tuples with start(x,y) and end(x,y)
     while running:
         for e in p.event.get():
             if e.type == p.QUIT:
                 running = False
+            elif e.type == p.MOUSEBUTTONDOWN:
+                location = p.mouse.get_pos() #x,y location
+                row, col = location[1]//SQ_SIZE, location[0]//SQ_SIZE
+                if selected_sq == (row, col): #selected same square
+                    selected_sq = ()
+                    player_clicks = []
+                else:
+                    selected_sq = (row, col)
+                    player_clicks.append(selected_sq)
+                if len(player_clicks) == 2: #after second click
+                    move = Engine.Move(player_clicks[0], player_clicks[1], gs.board)
+                    print(move.get_chess_notation())
+                    gs.make_move(move)
+                    #resets user clicks
+                    selected_sq = () 
+                    player_clicks = []
+
+
         draw_gamestate(screen, gs)
         clock.tick(MAX_FPS)
         p.display.flip()
