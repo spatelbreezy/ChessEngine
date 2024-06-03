@@ -26,14 +26,19 @@ def main():
     clock = p.time.Clock()
     screen.fill(p.Color("white"))
     gs = Engine.GameState()
+    valid_moves = gs.get_valid_moves()
+    move_made = False #flag variable for when move is made
     load_images()
     running = True
     selected_sq = () #default is no selected square, stores a tuple (row,col)
     player_clicks = [] #keeps track of clicks, 2 tuples with start(x,y) and end(x,y)
+
+
     while running:
         for e in p.event.get():
             if e.type == p.QUIT:
                 running = False
+            #mouse handler
             elif e.type == p.MOUSEBUTTONDOWN:
                 location = p.mouse.get_pos() #x,y location
                 row, col = location[1]//SQ_SIZE, location[0]//SQ_SIZE
@@ -46,11 +51,20 @@ def main():
                 if len(player_clicks) == 2: #after second click
                     move = Engine.Move(player_clicks[0], player_clicks[1], gs.board)
                     print(move.get_chess_notation())
-                    gs.make_move(move)
+                    if move in valid_moves:
+                        gs.make_move(move)
+                        move_made = True
                     #resets user clicks
                     selected_sq = () 
                     player_clicks = []
-
+            #key handlers
+            elif e.type == p.KEYDOWN:
+                if e.key  == p.K_z: #undo when 'z' is pressed
+                    gs.undo_move()
+                    move_made = True
+        if move_made:
+            valid_moves = gs.get_valid_moves()
+            move_made = False
 
         draw_gamestate(screen, gs)
         clock.tick(MAX_FPS)
