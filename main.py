@@ -7,7 +7,7 @@ WIDTH = HEIGHT = 512
 DIMENSION = 8 
 SQ_SIZE = HEIGHT // DIMENSION #size of each board square
 MAX_FPS = 15 
-IMAGES = {}
+IMAGES: dict[str, str] = {}  
 
 #Initializes a global dictionary of images
 def load_images():

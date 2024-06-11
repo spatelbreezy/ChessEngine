@@ -18,6 +18,8 @@ class GameState():
             ["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
             ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"],
         ]
+        self.move_funcs = {'p': self.get_pawn_moves, 'R': self.get_rook_moves, 'N': self.get_knight_moves,
+                            'B': self.get_bishop_moves, 'Q': self.get_queen_moves, 'K': self.get_king_moves}
 
         self.white_to_move = True
         self.move_log = []
@@ -39,31 +41,87 @@ class GameState():
 
     # All moves considering checks
     def get_valid_moves(self):
-        return get_all_possible() #temporary
+        return self.get_all_possible() #temporary
 
     # All moves not considering checks
     def get_all_possible(self):
         moves = []
         for row in range(len(self.board)):
-            for col in range(len(self.board[r])):
+            for col in range(len(self.board[row])):
                 turn = self.board[row][col][0]
                 if (turn == 'w' and self.white_to_move) or (turn == 'b' and not self.white_to_move):
                     piece = self.board[row][col][1]
-                    if piece == 'p':
-                        self.get_pawn_moves(r, c, moves)
-                    elif piece == 'R':
-                        self.get_rook_moves(r, c, moves)
+                    self.move_funcs[piece](row, col, moves) #calls appropriate move function based on piece
         return moves
+        
     #Get all the pawn moves for the pawn location at (r,c) and adds to list of valid moves
     def get_pawn_moves(self, r, c, moves):
-        pass
+        if self.white_to_move:
+            if self.board[r-1][c] == "--": #1 square pawn advance
+                moves.append(Move((r,c), (r-1, c), self.board))
+                if r==6 and self.board[r-2][c] == "--": #2 square pawn advance
+                    moves.append(Move((r,c), (r-2, c), self.board))
+
+            if c-1 >= 0: #captures to left
+                if self.board[r-1][c-1][0] == 'b': #possible enemy piece to capture
+                    moves.append(Move((r,c), (r-1,c-1), self.board))
+            if c+1 <= 7: #captures to right
+                if self.board[r+1][c+1][0] == 'b':
+                    moves.append(Move((r,c), (r-1,c+1), self.board))
+
+        else: #black pawn moves
+            if self.board[r+1][c] == "--":
+                moves.append(Move((r,c), (r+1, c), self.board))
+                if r==1 and self.board[r+2][c] == "--":
+                    moves.append(Move((r,c), (r+2,c), self.board))
+
+            #captures
+            if c-1 >= 0:
+                if self.board[r+1][c-1][0] == 'w':
+                    moves.append(Move((r,c), (r+1, c-1), self.board))
+            if c+1 <= 7:
+                if self.board[r+1][c+1][0] == 'w':
+                    moves.append(Move((r,c), (r+1, c+1), self.board))
+        #add pawn promos later:(((
         
     #Get all the rook moves for the rook at location (r,c) and adds to the list of valid moves
     def get_rook_moves(self, r, c, moves): 
-        pass                   
+        directions = ((-1,0), (0, -1), (1,0), (0,1))
+        enemy = 'b' if self.white_to_move else 'w'
+        for d in directions:
+            for i in range(1, 8):
+                end_row = r + d[0] * i
+                end_col = c + d[1] * i
+                if 0 <= end_row < 8 and 0 <= end_col < 8: #in bounds
+                    end_piece = self.board[end_row][end_col]
+                    if end_piece == '--':
+                        moves.append(Move((r,c), (end_row, end_col), self.board))
+                    elif end_piece[0] == enemy:
+                        moves.append(Move((r,c), (end_row, end_col), self.board))
+                        break
+                    else: #friendly fire xD
+                        break
+                else: #invalid spot
+                    break
+      
+    #Get all the knight moves for the rook at location (r,c) and adds to the list of valid moves
+    def get_knight_moves(self, r, c, moves): 
+        pass   
+    
+    #Get all the bishop moves for the rook at location (r,c) and adds to the list of valid moves
+    def get_bishop_moves(self, r, c, moves): 
+        pass   
+    
+    #Get all the queen moves for the rook at location (r,c) and adds to the list of valid moves
+    def get_queen_moves(self, r, c, moves): 
+        pass   
+    
+    #Get all the king moves for the rook at location (r,c) and adds to the list of valid moves
+    def get_king_moves(self, r, c, moves): 
+        pass             
 
 
-z
+
 
 class Move():
     #rank and file converters (back and forth)
