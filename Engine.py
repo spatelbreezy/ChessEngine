@@ -86,7 +86,7 @@ class GameState():
         
     #Get all the rook moves for the rook at location (r,c) and adds to the list of valid moves
     def get_rook_moves(self, r, c, moves): 
-        directions = ((-1,0), (0, -1), (1,0), (0,1))
+        directions = ((-1,0), (0, -1), (1,0), (0,1)) #up down left right
         enemy = 'b' if self.white_to_move else 'w'
         for d in directions:
             for i in range(1, 8):
@@ -106,18 +106,55 @@ class GameState():
       
     #Get all the knight moves for the rook at location (r,c) and adds to the list of valid moves
     def get_knight_moves(self, r, c, moves): 
-        pass   
+        directions =  ((-2,-1), (-2,1), (-1,-2), (-1,2), (1,-2), (1,2), (2,-1), (2,1)) #all the ways knight can move!
+        ally = "w" if self.white_to_move else "b"
+        for move in directions:
+            end_row = r + move[0]
+            end_col = c + move[1]
+            if 0 <= end_row < 8 and 0 <= end_col < 8:
+                end_piece = self.board[end_row][end_col]
+                if end_piece[0] != ally: #if the piece is an enemy
+                    moves.append(Move(r,c), (end_row, end_col), self.board)
+
     
     #Get all the bishop moves for the rook at location (r,c) and adds to the list of valid moves
     def get_bishop_moves(self, r, c, moves): 
+        directions = ((-1,-1), (-1, 1), (1, -1), (1, 1)) #diagonals
+        enemy = "b" if self.white_to_move else "w"
+        for d in directions:
+            for i in range(1, 8):
+                end_row = r + d[0] * i
+                end_col = c + d[1] * i
+                if 0 <= end_row < 8 and 0 <= end_col < 8: #on board?
+                    end_piece = self.board[end_row][end_col]
+                    if end_piece == '--': #empty space?
+                        moves.append(Move((r,c), (end_row, end_col), self.board))
+                    elif end_piece[0] == enemy: #enemy piece?
+                        moves.append(Move((r,c), (end_row, end_col), self.board))
+                        break
+                    else:
+                        break
+                else: #not on board :(
+                    break
         pass   
     
     #Get all the queen moves for the rook at location (r,c) and adds to the list of valid moves
-    def get_queen_moves(self, r, c, moves): 
-        pass   
+    def get_queen_moves(self, r, c, moves):
+        self.get_rook_moves(r, c, moves)
+        self.get_bishop_moves(r, c, moves)
+   
     
     #Get all the king moves for the rook at location (r,c) and adds to the list of valid moves
-    def get_king_moves(self, r, c, moves): 
+    def get_king_moves(self, r, c, moves):
+        directions = ((-1,-1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1))
+        ally = "w" if self.white_to_move else "b"
+        for i in range(8):
+            end_row = r + directions[i][0]
+            end_col = c + directions[i][1]
+            if 0 <= end_row < 8 and 0 <= end_col < 8:
+                end_piece = self.board[end_row][end_col]
+                if end_piece[0] != ally:
+                    moves.append(Move((r, c), (end_row, end_col), self.board)) 
         pass             
 
 
