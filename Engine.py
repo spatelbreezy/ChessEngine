@@ -23,6 +23,11 @@ class GameState():
 
         self.white_to_move = True
         self.move_log = []
+        self.wK_location = (7, 4) #white king location
+        self.bK_location = (0, 4) #black king location
+        self.in_check = False
+        self.pins = []
+        self.checks = []
 
     #Takes a Move object and executes it (no castling, pawn promo, or en-passant)
     def make_move(self, move):
@@ -30,6 +35,11 @@ class GameState():
         self.board[move.end_row][move.end_col] = move.piece_moved
         self.move_log.append(move) #allows undo function
         self.white_to_move = not self.white_to_move #flips to other players move
+        if move.piece_moved == "wK":
+            self.wK_location = (move.end_row, move.end_col)
+        elif move.piece_moved == "bK":
+            self.bK_location = (move.end_row, move.end_col)
+
 
     #Undos the last move
     def undo_move(self):
@@ -38,10 +48,107 @@ class GameState():
             self.board[move.start_row][move.start_col] = move.piece_moved
             self.board[move.end_row][move.end_col] = move.captured
             self.white_to_move = not self.white_to_move #switches turn back
+            if move.piece_moved == "wK":
+                self.wK_location = (move.start_row, move.start_col)
+            elif move.piece_moved == "bK":
+                self.bK_location = (move.start_row, move.start_col)
+            
 
     # All moves considering checks
     def get_valid_moves(self):
-        return self.get_all_possible() #temporary
+        moves = []
+        self.in_check, self.pins, self.checks = self.check_pins_and_checks()
+        if self.white_to_move:
+            king_row, king_col = self.wK_location[0], self.wK_location[1]
+        else:
+            king_row, king_col = self.bK_location[0], self.bK_location[1]
+        
+        if self.in_check:
+            if len(self.checks) == 1: #only 1 possible check, block check or move king!
+                moves = self.get_all_possible() #all possible moves
+                check = self.checks[0] #check info
+                check_row, check_col = check[0], check[1]
+                piece_checking = self.board[check_row][check_col]
+                valid_sqrs = []
+                if piece_checking[1] == 'N':
+                    valid_sqrs = [(check_row, check_col)]
+                else:
+                    for i in range(1, 8):
+                        sqr = (king_row + check[2]*i, king_col + check[3]*i) 
+                        valid_sqrs.append(sqr)
+                        if sqr[0] == check_row and valid_sqrs[1] == check_col:
+                            break
+                #reverse traversal and get rid of any moves that dont block check or move king
+                for i in range(len(moves)-1, -1, -1): 
+                    if moves[i].piece_moved[1] != "K": #does not move king
+                        if (moves[i].end_row, moves[i].end_col) not in valid_sqrs:
+                            moves.remove(moves[i])
+            else: #double check
+                self.get_king_moves(king_row, king_col, moves)
+        else: #not in check so all moves are valid
+            moves = self.get_all_possible()                 
+        
+        return moves
+
+    def check_pins_and_checks(self):
+        pins = []
+        checks = []
+        in_check = False
+        if self.white_to_move:
+            enemy = "b"
+            ally = "w"
+            start_row, start_col = self.wK_location[0], self.wK_location[1]
+        else: #black's turn
+            enemy = "w"
+            ally = "b"
+            start_row, start_col = self.bK_location[0], self.bK_location[1]
+
+        directions = ((-1, 0), (0, -1), (1, 0), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1))
+        for j in range(len(directions)):
+            d = directions[j]
+            possible_pin = () #resets possible pins
+            for i in range(1, 8):
+                end_row = start_row + d[0] * i
+                end_col = start_col + d[1] * i
+                if 0 <= end_row < 8 and 0 <= end_col < 8: #on board
+                    end_piece = self.board[end_row][end_col]
+                    if end_piece[0] == ally:
+                        if possible_pin == ():
+                            possible_pin = (end_row, end_col, d[0], d[1])
+                        else:
+                            break
+                    elif end_piece[0] == enemy:
+                        type = end_piece[1]
+                        #5 diff possibilites
+                        #1) orthogonally away from king and piece is rook
+                        #2) diagonally away from king and piece is bishop
+                        #3) 1 sqr away diagonally from king and piece is a pawn
+                        #4) any direction and piece is a queen
+                        #5) any direction 1 away and piece is a king
+                        if (0 <= j <= 3 and type == 'R') or \
+                            (4 <= j <= 7 and type == 'B') or \
+                                (i == 1 and type == 'p' and ((enemy == 'w' and 6 <= j <= 7) or (enemy == 'b' and 4 <= j <= 5))) or \
+                                    (type == 'Q') or (i == 1 and type == 'K'):
+                            if possible_pin == ():
+                                in_check = True
+                                checks.append((end_row, end_col, d[0], d[1]))
+                                break
+                            else:
+                                pins.append(possible_pin)
+                                break
+                        else:   
+                            break
+        
+        knight_directions = ((-2, -1), (-2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2), (2, -1), (2, 1))
+        for m in knight_directions:
+            end_row, end_col = start_row + m[0], start_col + m[1]
+            if 0 <= end_row < 8 and 0 <= end_col < 8:
+                end_piece = self.board[end_row][end_col]
+                if end_piece[0] == enemy and end_piece[1] == 'N':
+                    in_check = True
+                    checks.append((end_row, end_col, m[0], m[1]))
+
+        return (in_check, pins, checks)
 
     # All moves not considering checks
     def get_all_possible(self):
