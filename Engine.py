@@ -2,12 +2,12 @@
 # Allows the main driver to interact with the current state of the game. 
 # Also determines valid moves. 
 
-class GameState():
+class GameState:
     def __init__(self): 
-        #board is an 8x8 2d list. Each element has 2 characters
+        #board is a 8x8 2d list. Each element has 2 characters
         #The first character represents color. 'b' ==  black, 'w' == white
         #The second character represents the type of piece. 'K', 'Q', 'N, 'R', 'B', 'p' 
-        # '--' signfies empty position with no piece.
+        # '--' signifies empty position with no piece.
         self.board = [ 
             ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
             ["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
@@ -54,7 +54,7 @@ class GameState():
                 self.bK_location = (move.start_row, move.start_col)
             
 
-    # All moves considering checks
+    #All moves considering checks
     def get_valid_moves(self):
         moves = []
         self.in_check, self.pins, self.checks = self.check_pins_and_checks()
@@ -69,19 +69,19 @@ class GameState():
                 check = self.checks[0] #check info
                 check_row, check_col = check[0], check[1]
                 piece_checking = self.board[check_row][check_col]
-                valid_sqrs = []
+                valid_squares = []
                 if piece_checking[1] == 'N':
-                    valid_sqrs = [(check_row, check_col)]
+                    valid_squares = [(check_row, check_col)]
                 else:
                     for i in range(1, 8):
                         sqr = (king_row + check[2]*i, king_col + check[3]*i) 
-                        valid_sqrs.append(sqr)
-                        if sqr[0] == check_row and valid_sqrs[1] == check_col:
+                        valid_squares.append(sqr)
+                        if sqr[0] == check_row and valid_squares[1] == check_col:
                             break
-                #reverse traversal and get rid of any moves that dont block check or move king
+                #reverse traversal and get rid of any moves that don't block check or move king
                 for i in range(len(moves)-1, -1, -1): 
                     if moves[i].piece_moved[1] != "K": #does not move king
-                        if (moves[i].end_row, moves[i].end_col) not in valid_sqrs:
+                        if (moves[i].end_row, moves[i].end_col) not in valid_squares:
                             moves.remove(moves[i])
             else: #double check
                 self.get_king_moves(king_row, king_col, moves)
@@ -119,7 +119,7 @@ class GameState():
                             break
                     elif end_piece[0] == enemy:
                         type = end_piece[1]
-                        #5 diff possibilites
+                        #5 diff possibilities
                         #1) orthogonally away from king and piece is rook
                         #2) diagonally away from king and piece is bishop
                         #3) 1 sqr away diagonally from king and piece is a pawn
@@ -127,7 +127,8 @@ class GameState():
                         #5) any direction 1 away and piece is a king
                         if (0 <= j <= 3 and type == 'R') or \
                             (4 <= j <= 7 and type == 'B') or \
-                                (i == 1 and type == 'p' and ((enemy == 'w' and 6 <= j <= 7) or (enemy == 'b' and 4 <= j <= 5))) or \
+                                (i == 1 and type == 'p' and
+                                 ((enemy == 'w' and 6 <= j <= 7) or (enemy == 'b' and 4 <= j <= 5))) or \
                                     (type == 'Q') or (i == 1 and type == 'K'):
                             if possible_pin == ():
                                 in_check = True
@@ -165,35 +166,35 @@ class GameState():
     def get_pawn_moves(self, r, c, moves):
         if self.white_to_move:
             if self.board[r-1][c] == "--": #1 square pawn advance
-                moves.append(Move((r,c), (r-1, c), self.board))
+                moves.append(Move((r, c), (r-1, c), self.board))
                 if r==6 and self.board[r-2][c] == "--": #2 square pawn advance
-                    moves.append(Move((r,c), (r-2, c), self.board))
+                    moves.append(Move((r, c), (r-2, c), self.board))
 
             if c-1 >= 0: #captures to left
                 if self.board[r-1][c-1][0] == 'b': #possible enemy piece to capture
-                    moves.append(Move((r,c), (r-1,c-1), self.board))
+                    moves.append(Move((r, c), (r-1, c-1), self.board))
             if c+1 <= 7: #captures to right
                 if self.board[r+1][c+1][0] == 'b':
-                    moves.append(Move((r,c), (r-1,c+1), self.board))
+                    moves.append(Move((r, c), (r-1, c+1), self.board))
 
         else: #black pawn moves
             if self.board[r+1][c] == "--":
-                moves.append(Move((r,c), (r+1, c), self.board))
+                moves.append(Move((r, c), (r+1, c), self.board))
                 if r==1 and self.board[r+2][c] == "--":
-                    moves.append(Move((r,c), (r+2,c), self.board))
+                    moves.append(Move((r, c), (r+2, c), self.board))
 
             #captures
             if c-1 >= 0:
                 if self.board[r+1][c-1][0] == 'w':
-                    moves.append(Move((r,c), (r+1, c-1), self.board))
+                    moves.append(Move((r, c), (r+1, c-1), self.board))
             if c+1 <= 7:
                 if self.board[r+1][c+1][0] == 'w':
-                    moves.append(Move((r,c), (r+1, c+1), self.board))
+                    moves.append(Move((r, c), (r+1, c+1), self.board))
         #add pawn promos later:(((
         
     #Get all the rook moves for the rook at location (r,c) and adds to the list of valid moves
     def get_rook_moves(self, r, c, moves): 
-        directions = ((-1,0), (0, -1), (1,0), (0,1)) #up down left right
+        directions = ((-1, 0), (0, -1), (1, 0), (0, 1)) #up down left right
         enemy = 'b' if self.white_to_move else 'w'
         for d in directions:
             for i in range(1, 8):
@@ -202,9 +203,9 @@ class GameState():
                 if 0 <= end_row < 8 and 0 <= end_col < 8: #in bounds
                     end_piece = self.board[end_row][end_col]
                     if end_piece == '--':
-                        moves.append(Move((r,c), (end_row, end_col), self.board))
+                        moves.append(Move((r, c), (end_row, end_col), self.board))
                     elif end_piece[0] == enemy:
-                        moves.append(Move((r,c), (end_row, end_col), self.board))
+                        moves.append(Move((r, c), (end_row, end_col), self.board))
                         break
                     else: #friendly fire xD
                         break
@@ -226,7 +227,7 @@ class GameState():
     
     #Get all the bishop moves for the rook at location (r,c) and adds to the list of valid moves
     def get_bishop_moves(self, r, c, moves): 
-        directions = ((-1,-1), (-1, 1), (1, -1), (1, 1)) #diagonals
+        directions = ((-1, -1), (-1, 1), (1, -1), (1, 1)) #diagonals
         enemy = "b" if self.white_to_move else "w"
         for d in directions:
             for i in range(1, 8):
@@ -235,9 +236,9 @@ class GameState():
                 if 0 <= end_row < 8 and 0 <= end_col < 8: #on board?
                     end_piece = self.board[end_row][end_col]
                     if end_piece == '--': #empty space?
-                        moves.append(Move((r,c), (end_row, end_col), self.board))
+                        moves.append(Move((r, c), (end_row, end_col), self.board))
                     elif end_piece[0] == enemy: #enemy piece?
-                        moves.append(Move((r,c), (end_row, end_col), self.board))
+                        moves.append(Move((r, c), (end_row, end_col), self.board))
                         break
                     else:
                         break
@@ -279,7 +280,8 @@ class Move():
         self.end_row, self.end_col = end_sq[0], end_sq[1]
         self.piece_moved = board[self.start_row][self.start_col]
         self.captured = board[self.end_row][self.end_col]
-        self.move_ID = self.start_row * 1000 + self.start_col * 100 + self.end_row * 10 + self.end_col * 1 #ID for equals method
+        self.move_ID = (self.start_row * 1000 + self.start_col * 100
+                        + self.end_row * 10 + self.end_col * 1) #ID for equals method
     
 
     #Overriding the equals method
@@ -290,7 +292,8 @@ class Move():
 
 
     def get_chess_notation(self):
-        return self.get_rank_file(self.start_row, self.start_col) + " -> " + self.get_rank_file(self.end_row, self.end_col)
+        return (self.get_rank_file(self.start_row, self.start_col) + " -> "
+                + self.get_rank_file(self.end_row, self.end_col))
 
 
     def get_rank_file(self, r, c):
