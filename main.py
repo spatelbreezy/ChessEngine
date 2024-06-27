@@ -51,12 +51,13 @@ def main():
                 if len(player_clicks) == 2: #after second click
                     move = Engine.Move(player_clicks[0], player_clicks[1], gs.board)
                     print(move.get_chess_notation())
-                    if move in valid_moves:
-                        gs.make_move(move)
-                        move_made = True
-                        selected_sq = () 
-                        player_clicks = []
-                    else:
+                    for i in range(len(valid_moves)):
+                        if move == valid_moves[i]:
+                            gs.make_move(valid_moves[i])
+                            move_made = True
+                            selected_sq = () 
+                            player_clicks = []
+                    if not move_made:
                         player_clicks = [selected_sq]
             #key handlers
             elif e.type == p.KEYDOWN:
