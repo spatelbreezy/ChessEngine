@@ -377,6 +377,60 @@ class GameState:
                         self.wK_location = (r, c)
                     else:
                         self.bK_location = (r, c)
+        self.get_castle_moves(r, c, moves, ally)
+    
+    def get_castle_moves(self, r, c, moves, ally):
+        in_check = self.square_under_attack(r, c, ally)
+        if in_check:
+            return
+        
+        if (self.white_to_move and self.wK_castle) or (not self.white_to_move and self.bK_castle):
+            self.get_king_castlemoves(r, c, moves, ally)
+        if (self.white_to_move and self.wQ_castle) or (not self.white_to_move and self.bQ_castle):
+            self.get_queen_castlemoves(r, c, moves, ally)
+
+    def get_king_castlemoves(self, r, c, moves, ally):
+        if self.board[r][c + 1] == '--' and self.board[r][c + 2] == '--' and not self.square_under_attack(r, c + 1, ally) and not self.square_under_attack(r, c + 2, ally):
+            moves.append(Move((r, c), (r, c + 2), self.board, castle=True))
+    
+    def get_queen_castlemoves(self, r, c, moves, ally):
+        if self.board[r][c - 1] == '--' and self.board[r][c - 2] == '--' and self.board[r][c - 3] == '--' and not self.square_under_attack(r, c - 1, ally) and not self.square_under_attack(r, c - 2, ally):
+            moves.append(Move((r, c), (r, c - 2), self.board, castle=True))
+
+    def square_under_attack(self, r, c, ally):
+        enemy = 'w' if ally == 'b' else 'b'
+        directions = ((-1, 0), (0, -1), (1, 0), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1))
+        for j in range(len(directions)):
+            d = directions[j]
+            for i in range(1, 8):
+                end_row = r + d[0] * i
+                end_col = c + d[1] * i
+                if 0 <= end_row < 8 and 0 <= end_col < 8:
+                    end_piece = self.board[end_row][end_col]
+                    if end_piece[0] == ally:
+                        break
+                    elif end_piece[0] == enemy:
+                        type = end_piece[1]
+                        if (0 <= j <= 3 and type == 'R') or \
+                            (4 <= j <= 7 and type == 'B') or \
+                                (i == 1 and type == 'p' and
+                                 ((enemy == 'w' and 6 <= j <= 7) or (enemy == 'b' and 4 <= j <= 5))) or \
+                                    (type == 'Q') or (i == 1 and type == 'K'):
+                            return True
+                        else:
+                            break
+                else:
+                    break
+        knight_directions = ((-2, -1), (-2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2), (2, -1), (2, 1))
+        for m in knight_directions:
+            end_row = r + m[0]
+            end_col = c + m[1]
+            if 0 <= end_row < 8 and 0 <= end_col < 8:
+                end_piece = self.board[end_row][end_col]
+                if end_piece[0] == enemy and end_piece[1] == 'N':
+                    return True
+        return False
+
 
     def update_castle(self, move):
         if move.piece_moved == 'wK':
