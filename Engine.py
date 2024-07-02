@@ -98,6 +98,14 @@ class GameState:
             if move.piece_moved[1] == 'p' and abs(move.start_row - move.end_row) == 2:
                 self.enPassant = ()
 
+            if move.castle:
+                if move.end_col - move.start_col == 2:
+                    self.board[move.end_row][move.end_col + 1] = self.board[move.end_row][move.end_col - 1]
+                    self.board[move.end_row][move.end_col - 1] = '--'
+                else:
+                    self.board[move.end_row][move.end_col + 1] = self.board[move.end_row][move.end_col - 2]
+                    self.board[move.end_row][move.end_col - 2] = '--'
+                    
             self.castle_log.pop()
             castle_rights = self.castle_log[-1]
             self.wK_castle = castle_rights.wks
