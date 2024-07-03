@@ -1,6 +1,7 @@
 # Main driver file. 
 # Handles user input and displays the current game state. 
-import Engine 
+import Engine
+import ChessAI
 import pygame as p
 
 WIDTH = HEIGHT = 512
@@ -34,14 +35,19 @@ def main():
     selected_sq = () #default is no selected square, stores a tuple (row,col)
     player_clicks = [] #keeps track of clicks, 2 tuples with start(x,y) and end(x,y)
     game_over = False
+    player_one = False #If a human is playing white, then this will be true. If an AI is playing, then false
+    player_two = False #same as above but for black
 
     while running:
+        is_human_turn = (gs.white_to_move and player_one) or (not gs.white_to_move and player_two)
+
+
         for e in p.event.get():
             if e.type == p.QUIT:
                 running = False
             #mouse handler
             elif e.type == p.MOUSEBUTTONDOWN:
-                if not game_over:
+                if not game_over and is_human_turn:
                     location = p.mouse.get_pos() #x,y location
                     row, col = location[1]//SQ_SIZE, location[0]//SQ_SIZE
                     if selected_sq == (row, col): #selected same square
@@ -75,6 +81,13 @@ def main():
                     player_clicks = []
                     move_made = False
                     animate = False
+        #AI Move finder logic
+        if not game_over and not is_human_turn:
+            ai_move = ChessAI.find_random_move(valid_moves)
+            gs.make_move(ai_move)
+            move_made = True
+            animate = True
+            
 
         if move_made:
             if animate:
