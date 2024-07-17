@@ -103,8 +103,8 @@ class GameState:
                     self.board[move.end_row][move.end_col + 1] = self.board[move.end_row][move.end_col - 1]
                     self.board[move.end_row][move.end_col - 1] = '--'
                 else:
-                    self.board[move.end_row][move.end_col + 1] = self.board[move.end_row][move.end_col - 2]
-                    self.board[move.end_row][move.end_col - 2] = '--'
+                    self.board[move.end_row][move.end_col - 2] = self.board[move.end_row][move.end_col + 1]
+                    self.board[move.end_row][move.end_col + 1] = '--'
                     
             self.castle_log.pop()
             castle_rights = self.castle_log[-1]
@@ -112,6 +112,9 @@ class GameState:
             self.bK_castle = castle_rights.bks
             self.wQ_castle = castle_rights.wqs
             self.bQ_castle = castle_rights.bqs
+
+            self.checkmate = False
+            self.stalemate = False
 
     #All moves considering checks
     def get_valid_moves(self):
@@ -135,7 +138,7 @@ class GameState:
                     for i in range(1, 8):
                         sqr = (king_row + check[2]*i, king_col + check[3]*i) 
                         valid_squares.append(sqr)
-                        if sqr[0] == check_row and valid_squares[1] == check_col:
+                        if sqr[0] == check_row and sqr[1] == check_col:
                             break
                 #reverse traversal and get rid of any moves that don't block check or move king
                 for i in range(len(moves)-1, -1, -1): 
