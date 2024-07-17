@@ -61,7 +61,7 @@ class GameState:
             self.board[move.start_row][move.end_col] = '--'
         #if pawn promo change piece
         if move.pawn_promo:
-            promoted = input("Promote to Q, R, B, or N:") #added to ui
+            promoted = input("Promote to Q, R, B, or N:") #add later
             self.board[move.end_row][move.end_col] = move.piece_moved[0] + promoted
 
         #update castling
@@ -76,8 +76,6 @@ class GameState:
                 self.board[move.end_row][move.end_col + 1] = self.board[move.end_row][move.end_col - 2]
                 self.board[move.end_row][move.end_col - 2] = '--'
 
-
- 
     #Undos the last move
     def undo_move(self):
         if len(self.move_log) != 0: 
@@ -161,6 +159,7 @@ class GameState:
 
         return moves
 
+    #Finds and returns if a player is in check, and all the pin and check moves available
     def check_pins_and_checks(self):
         pins = []
         checks = []
@@ -276,8 +275,7 @@ class GameState:
                     moves.append(Move((r, c), (r + move_amt, c + 1), self.board, pawn_promo=promo))
                 if (r + move_amt, c + 1) == self.enPassant:
                     moves.append(Move((r, c), (r + move_amt, c + 1), self.board, enPassant=True))            
-
-        
+     
     #Get all the rook moves for the rook at location (r,c) and adds to the list of valid moves
     def get_rook_moves(self, r, c, moves): 
         is_pinned = False
@@ -309,7 +307,7 @@ class GameState:
                 else: #invalid spot
                     break
       
-    #Get all the knight moves for the rook at location (r,c) and adds to the list of valid moves
+    #Get all the knight moves for the knight at location (r,c) and adds to the list of valid moves
     def get_knight_moves(self, r, c, moves): 
         is_pinned = False
         for i in range(len(self.pins) - 1, -1, -1):
@@ -328,8 +326,7 @@ class GameState:
                     if end_piece[0] != ally: #if the piece is an enemy
                         moves.append(Move((r,c), (end_row, end_col), self.board))
 
-    
-    #Get all the bishop moves for the rook at location (r,c) and adds to the list of valid moves
+    #Get all the bishop moves for the bishop at location (r,c) and adds to the list of valid moves
     def get_bishop_moves(self, r, c, moves): 
         is_pinned = False
         pin_direction = ()
@@ -359,13 +356,12 @@ class GameState:
                 else: #not on board :(
                     break
     
-    #Get all the queen moves for the rook at location (r,c) and adds to the list of valid moves
+    #Get all the queen moves for the queen at location (r,c) and adds to the list of valid moves
     def get_queen_moves(self, r, c, moves):
         self.get_rook_moves(r, c, moves)
         self.get_bishop_moves(r, c, moves)
    
-    
-    #Get all the king moves for the rook at location (r,c) and adds to the list of valid moves
+    #Get all the king moves for the king at location (r,c) and adds to the list of valid moves
     def get_king_moves(self, r, c, moves):
         row_moves = (-1, -1, -1, 0, 0, 1, 1, 1)
         col_moves = (-1, 0, 1, -1, 1, -1, 0, 1)
@@ -390,6 +386,7 @@ class GameState:
                         self.bK_location = (r, c)
         self.get_castle_moves(r, c, moves, ally)
     
+    #Get all the castling moves for piece at location (r,c)
     def get_castle_moves(self, r, c, moves, ally):
         in_check = self.square_under_attack(r, c, ally)
         if in_check:
@@ -400,14 +397,17 @@ class GameState:
         if (self.white_to_move and self.wQ_castle) or (not self.white_to_move and self.bQ_castle):
             self.get_queen_castlemoves(r, c, moves, ally)
 
+    #Get the king side castling moves
     def get_king_castlemoves(self, r, c, moves, ally):
         if self.board[r][c + 1] == '--' and self.board[r][c + 2] == '--' and not self.square_under_attack(r, c + 1, ally) and not self.square_under_attack(r, c + 2, ally):
             moves.append(Move((r, c), (r, c + 2), self.board, castle=True))
     
+    #Get the queen side castling moves
     def get_queen_castlemoves(self, r, c, moves, ally):
         if self.board[r][c - 1] == '--' and self.board[r][c - 2] == '--' and self.board[r][c - 3] == '--' and not self.square_under_attack(r, c - 1, ally) and not self.square_under_attack(r, c - 2, ally):
             moves.append(Move((r, c), (r, c - 2), self.board, castle=True))
 
+    #Returns true if the piece at (r,c) is under possible attack from another piece
     def square_under_attack(self, r, c, ally):
         enemy = 'w' if ally == 'b' else 'b'
         directions = ((-1, 0), (0, -1), (1, 0), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1))
@@ -442,7 +442,7 @@ class GameState:
                     return True
         return False
 
-
+    #Updates the castle rights based on certain conditions
     def update_castle(self, move):
         if move.piece_moved == 'wK':
             self.wK_castle = False
@@ -469,7 +469,6 @@ class CastleRights():
         self.bks = bks
         self.wqs = wqs
         self.bqs = bqs
-
 
 class Move():
     #rank and file converters (back and forth)

@@ -3,7 +3,7 @@ import random
 piece_scores = {'K': 0, 'Q': 10, 'R': 5, 'B': 3, 'N': 3, 'p': 1}
 CHECKMATE = 1000
 STALEMATE = 0
-DEPTH = 3
+DEPTH = 3 #bigger will be laggier because of AI smart move picker algorithm
 
 #picks and returns a random move
 def find_random_move(valid_moves):
@@ -50,7 +50,8 @@ def find_best_move(gs, valid_moves):
 def find_best_negamax_move(gs, valid_moves):
     global next_move
     next_move = None
-    find_move_negaMax(gs, valid_moves, DEPTH, 1 if gs.white_to_move else -1)
+    random.shuffle(valid_moves)
+    find_move_negaMax(gs, valid_moves, DEPTH, -CHECKMATE, CHECKMATE, 1 if gs.white_to_move else -1)
     return next_move
 
 #recursive MinMax algorithm
@@ -85,21 +86,28 @@ def find_move_minmax(gs, valid_moves, depth, is_white_move):
         return min_score
 
 #NegaMax algorithm with alpha beta pruning to find best move
-def find_move_negaMax(gs, valid_moves, depth, turn_multiplier):
+# THIS IS THE BEST ALGORITHM 
+def find_move_negaMax(gs, valid_moves, depth, alpha, beta, turn_multiplier):
     global next_move
     if depth == 0:
         return turn_multiplier * score_board(gs)
 
+    #move ordering - evalute the best ones first
     max_score = -CHECKMATE
     for move in valid_moves:
         gs.make_move(move)
         next_moves = gs.get_valid_moves()
-        score = -find_move_negaMax(gs, next_moves, depth - 1, -turn_multiplier)
+        score = -find_move_negaMax(gs, next_moves, depth - 1, -beta, -alpha, -turn_multiplier)
         if score > max_score:
             max_score = score
             if depth == DEPTH:
                 next_move = move
         gs.undo_move()
+        if max_score > alpha: #pruning
+            alpha = max_score
+        if alpha >= beta:
+            break #no need to continue in this move brnach
+             
     return max_score
 
 #Scores entire board
