@@ -1,6 +1,70 @@
 import random
 
 piece_scores = {'K': 0, 'Q': 10, 'R': 5, 'B': 3, 'N': 3, 'p': 1}
+
+#better ways to do this, but sufficient
+knight_scores = [   [1, 1, 1, 1, 1, 1, 1, 1],
+                    [1, 2, 2, 2, 2, 2, 2, 1],
+                    [1, 2, 3, 3, 3, 3, 2, 1],
+                    [1, 2, 3, 4, 4, 3, 2, 1],
+                    [1, 2, 3, 4, 4, 3, 2, 1],
+                    [1, 2, 3, 3, 3, 3, 2, 1],
+                    [1, 2, 2, 2, 2, 2, 2, 1],
+                    [1, 1, 1, 1, 1, 1, 1, 1]
+                ]
+
+bishop_score = [    [4, 3, 2, 1, 1, 2, 3, 4],
+                    [3, 4, 3, 2, 2, 3, 4, 3],
+                    [2, 3, 4, 3, 3, 4, 3, 2],
+                    [1, 2, 3, 4, 4, 3, 2, 1],
+                    [1, 2, 3, 4, 4, 3, 2, 1],
+                    [2, 3, 4, 3, 3, 4, 3, 2],
+                    [3, 4, 3, 2, 2, 3, 4, 3],
+                    [4, 3, 2, 1, 1, 2, 3, 4]
+               ]
+
+queen_scores = [    [1, 1, 1, 3, 1, 1, 1, 1],
+                    [1, 2, 3, 3, 3, 1, 1, 1],
+                    [1, 4, 3, 3, 3, 4, 2, 1],
+                    [1, 2, 3, 3, 3, 2, 2, 1],
+                    [1, 2, 3, 3, 3, 2, 2, 1],
+                    [1, 4, 3, 3, 3, 4, 2, 1],
+                    [1, 2, 3, 3, 3, 1, 1, 1],
+                    [1, 1, 1, 3, 1, 1, 1, 1]
+               ]
+
+rook_scores = [     [4, 3, 4, 4, 4, 4, 3, 4],
+                    [4, 4, 4, 4, 4, 4, 4, 4],
+                    [1, 1, 2, 3, 3, 2, 1, 1],
+                    [1, 2, 3, 4, 4, 3, 2, 1],
+                    [1, 2, 3, 4, 4, 3, 2, 1],
+                    [1, 1, 2, 3, 3, 2, 1, 1],
+                    [4, 4, 4, 4, 4, 4, 4, 4],
+                    [4, 3, 4, 4, 4, 4, 3, 4]
+              ]
+
+whitepawn_scores = [    [8, 8, 8, 8, 8, 8, 8, 8],
+                        [8, 8, 8, 8, 8, 8, 8, 8],
+                        [5, 6, 6, 7, 7, 6, 6, 5],
+                        [2, 3, 3, 5, 5, 3, 3, 2],
+                        [1, 2, 3, 4, 4, 3, 2, 1],
+                        [1, 1, 2, 3, 3, 2, 1, 1],
+                        [1, 1, 1, 0, 0, 1, 1, 1],
+                        [0, 0, 0, 0, 0, 0, 0, 0]
+                   ]
+
+blackpawn_scores = [    [0, 0, 0, 0, 0, 0, 0, 0],
+                        [1, 1, 1, 0, 0, 1, 1, 1],
+                        [1, 1, 2, 3, 3, 2, 1, 1],
+                        [1, 2, 3, 4, 4, 3, 2, 1],
+                        [2, 3, 3, 5, 5, 3, 3, 2],
+                        [5, 6, 6, 7, 7, 6, 6, 5],
+                        [8, 8, 8, 8, 8, 8, 8, 8],
+                        [8, 8, 8, 8, 8, 8, 8, 8]
+                   ]
+
+piece_position_scores = {'N': knight_scores, 'Q': queen_scores, 'B': bishop_score, 'R': rook_scores, 
+                        'bp': blackpawn_scores, 'wp': whitepawn_scores}
 CHECKMATE = 1000
 STALEMATE = 0
 DEPTH = 4 #bigger will be laggier because of AI smart move picker algorithm
@@ -125,13 +189,24 @@ def score_board(gs):
 
     score = 0
     #zero sum game
-    for row in gs.board:
-        for square in row:
-            if square[0] == 'w':
-                score += piece_scores[square[1]]
-            elif square[0] == 'b':
-                score -= piece_scores[square[1]]
-    
+    for row in range(len(gs.board)):
+        for col in range(len(gs.board[row])):
+            square = gs.board[row][col]
+            if square != '--':
+                #score positionally
+                pos_score = 0
+                if square[1] != 'K':
+                    if square[1] == 'p': #pawns only
+                        pos_score = piece_position_scores[square][row][col]
+                    else:
+                        pos_score = piece_position_scores[square[1]][row][col]
+
+                if square[0] == 'w':
+                    score += piece_scores[square[1]] + pos_score * 0.2
+                elif square[0] == 'b':
+                    score -= piece_scores[square[1]] + pos_score * 0.2
+
+
     return score
 
 #Score board based on material

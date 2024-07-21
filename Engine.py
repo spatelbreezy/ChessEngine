@@ -252,8 +252,10 @@ class GameState:
 
         if self.white_to_move:
             move_amt, start_row, back_row, enemy = -1, 6, 0, 'b'
+            king_row, king_col = self.wK_location
         else:
             move_amt, start_row, back_row, enemy = 1, 1, 7, 'w'
+            king_row, king_col = self.bK_location
         promo = False
 
         if self.board[r + move_amt][c] == '--':
@@ -271,7 +273,25 @@ class GameState:
                         promo = True
                     moves.append(Move((r, c), (r + move_amt, c - 1), self.board, pawn_promo=promo))
                 if (r + move_amt, c - 1) == self.enPassant:
-                    moves.append(Move((r, c), (r + move_amt, c - 1), self.board, enPassant=True))
+                    attacking_piece = blocking_piece = False
+                    if king_row == r:
+                        if king_col < c: #to the left
+                            inside_range = range(king_col + 1, c - 1)
+                            outside_range = range(c+1, 8)
+                        else:
+                            inside_range = range(king_col - 1, c, -1)
+                            outside_range = range(c-2, -1, -1)
+                        for i in inside_range:
+                            if self.board[r][i] != '--': #something blocking
+                                blocking_piece = True
+                        for i in outside_range:
+                            sq = self.board[r][i]
+                            if sq[0] == enemy and (sq[1] == 'R' or sq[1] == 'Q'):
+                                attacking_piece = True
+                            elif sq != '--':
+                                blocking_piece = True
+                    if not attacking_piece or blocking_piece:
+                        moves.append(Move((r, c), (r + move_amt, c - 1), self.board, enPassant=True))
         if c + 1 <= 7: #capture to right
             if not is_pinned or pin_direction == (move_amt, 1):
                 if self.board[r + move_amt][c + 1][0] == enemy:
@@ -279,7 +299,25 @@ class GameState:
                         promo = True
                     moves.append(Move((r, c), (r + move_amt, c + 1), self.board, pawn_promo=promo))
                 if (r + move_amt, c + 1) == self.enPassant:
-                    moves.append(Move((r, c), (r + move_amt, c + 1), self.board, enPassant=True))            
+                    attacking_piece = blocking_piece = False
+                    if king_row == r:
+                        if king_col < c: #to the left
+                            inside_range = range(king_col + 1, c)
+                            outside_range = range(c+2, 8)
+                        else:
+                            inside_range = range(king_col - 1, c + 1, -1)
+                            outside_range = range(c-1, -1, -1)
+                        for i in inside_range:
+                            if self.board[r][i] != '--': #something blocking
+                                blocking_piece = True
+                        for i in outside_range:
+                            sq = self.board[r][i]
+                            if sq[0] == enemy and (sq[1] == 'R' or sq[1] == 'Q'):
+                                attacking_piece = True
+                            elif sq != '--':
+                                blocking_piece = True
+                    if not attacking_piece or blocking_piece:
+                        moves.append(Move((r, c), (r + move_amt, c + 1), self.board, enPassant=True))            
      
     #Get all the rook moves for the rook at location (r,c) and adds to the list of valid moves
     def get_rook_moves(self, r, c, moves): 

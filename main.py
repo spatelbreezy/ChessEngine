@@ -180,7 +180,6 @@ def draw_movelog(screen, gs, font):
         screen.blit(text_obj, text_loc)
         textY += text_obj.get_height() + line_spacing
     
-
 #animating a move
 def animate_move(move, screen, board, clock):
     global colors
