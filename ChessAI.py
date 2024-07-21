@@ -3,7 +3,7 @@ import random
 piece_scores = {'K': 0, 'Q': 10, 'R': 5, 'B': 3, 'N': 3, 'p': 1}
 CHECKMATE = 1000
 STALEMATE = 0
-DEPTH = 3 #bigger will be laggier because of AI smart move picker algorithm
+DEPTH = 4 #bigger will be laggier because of AI smart move picker algorithm
 
 #picks and returns a random move
 def find_random_move(valid_moves):

@@ -32,6 +32,7 @@ class GameState:
         self.checkmate = False
         self.stalemate = False
         self.enPassant = () #where it CAN happen (possible sqr)
+        self.enPassantLog = [self.enPassant]
         #castling rights
         self.wK_castle = True
         self.wQ_castle = True
@@ -64,6 +65,8 @@ class GameState:
             promoted = input("Promote to Q, R, B, or N:") #add later
             self.board[move.end_row][move.end_col] = move.piece_moved[0] + promoted
 
+        self.enPassantLog.append(self.enPassant)
+
         #update castling
         self.update_castle(move)
         self.castle_log.append(CastleRights(self.wK_castle, self.bK_castle, self.wQ_castle, self.bQ_castle))
@@ -91,10 +94,12 @@ class GameState:
             if move.enPassant:
                 self.board[move.end_row][move.end_col] = '--'
                 self.board[move.start_row][move.end_col] = move.captured
-                self.enPassant = (move.end_row, move.end_col)
+                # self.enPassant = (move.end_row, move.end_col)
             
-            if move.piece_moved[1] == 'p' and abs(move.start_row - move.end_row) == 2:
-                self.enPassant = ()
+            # if move.piece_moved[1] == 'p' and abs(move.start_row - move.end_row) == 2:
+            #     self.enPassant = ()
+            self.enPassantLog.pop()
+            self.enPassant = self.enPassantLog[-1]
 
             if move.castle:
                 if move.end_col - move.start_col == 2:
@@ -462,6 +467,20 @@ class GameState:
                     self.bK_castle = False
                 elif move.start_col == 0:
                     self.bQ_castle = False
+        
+        #if rook is captured
+        if move.captured == 'wR':
+            if move.end_row == 7:
+                if move.end_col == 0:
+                    self.wQ_castle = False
+                elif move.end_col == 7:
+                    self.wK_castle = False
+        elif move.captured == 'bR':
+            if move.end_row == 0:
+                if move.end_col == 0:
+                    self.bQ_castle = False
+                elif move.end_col == 7:
+                    self.bK_castle = False
 
 class CastleRights():
     def __init__(self, wks, bks, wqs, bqs):
@@ -488,6 +507,8 @@ class Move():
         self.castle = castle
         if enPassant:
             self.captured = 'bp' if self.piece_moved == 'wp' else 'wp'
+
+        self.is_capture = self.captured != '--'
         self.move_ID = (self.start_row * 1000 + self.start_col * 100
                         + self.end_row * 10 + self.end_col * 1) #ID for equals method
         
@@ -507,3 +528,23 @@ class Move():
 
     def get_rank_file(self, r, c):
         return self.cols_to_files[c] + self.rows_to_ranks[r]
+
+    #overriding toString fctn
+    def __str__(self):
+        #castle
+        if self.castle:
+            return 'O-O' if self.end_col == 6 else 'O-O-O'
+    
+        end_sq = self.get_rank_file(self.end_row, self.end_col)
+        #pawn moves
+        if self.piece_moved[1] == 'p':
+            if self.is_capture:
+                return self.cols_to_files[self.start_col] + 'x' + end_sq
+            else:
+                return end_sq
+
+        #piece moves
+        move_string = self.piece_moved[1]
+        if self.is_capture:
+            move_string += 'x'
+        return move_string + end_sq
