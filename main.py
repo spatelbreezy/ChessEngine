@@ -38,9 +38,20 @@ def main():
     selected_sq = () #default is no selected square, stores a tuple (row,col)
     player_clicks = [] #keeps track of clicks, 2 tuples with start(x,y) and end(x,y)
     game_over = False
-    player_one = True #If a human is playing white, then this will be true. If an AI is playing, then false
-    player_two = False #same as above but for black
 
+    # Add menu selection before game starts
+    mode = game_mode_menu(screen)
+    if mode is None:
+        return  # Exit if user closed the window
+
+
+    player_one = True #If a human is playing white, then this will be true. If an AI is playing, then false
+    player_two = True #same as above but for black
+    if mode == 1:  # Player vs AI
+        player_two = False
+    elif mode == 2:  # AI vs AI
+        player_one = False
+        player_two = False
     while running:
         is_human_turn = (gs.white_to_move and player_one) or (not gs.white_to_move and player_two)
 
@@ -212,6 +223,41 @@ def draw_endtext(screen, text):
     text_obj = font.render(text, 0, p.Color('Black'))
     screen.blit(text_obj, text_loc.move(2, 2))
 
+def game_mode_menu(screen):
+    menu_font = p.font.SysFont("Arial", 32, True, False)
+    options = ["Player vs Player", "Player vs AI", "AI vs AI"]
+    buttons = []
+    
+    while True:
+        screen.fill(p.Color("white"))
+        
+        title = menu_font.render("Choose Game Mode", True, p.Color("black"))
+        screen.blit(title, (WIDTH // 2 - title.get_width() // 2, 50))
+        
+        mx, my = p.mouse.get_pos()
+        
+        buttons = []
+        for i, option in enumerate(options):
+            text = menu_font.render(option, True, p.Color("black"))
+            text_rect = text.get_rect()
+            text_rect.center = (WIDTH // 2, 150 + i * 50)
+            
+            if text_rect.collidepoint((mx, my)):
+                p.draw.rect(screen, p.Color("lightgray"), text_rect)
+            
+            screen.blit(text, text_rect)
+            buttons.append(text_rect)
+        
+        p.display.flip()
+        
+        for event in p.event.get():
+            if event.type == p.QUIT:
+                return None
+            if event.type == p.MOUSEBUTTONDOWN:
+                if event.button == 1:  # Left mouse button
+                    for i, button in enumerate(buttons):
+                        if button.collidepoint(event.pos):
+                            return i
 #if imported, this will still work!
 if __name__ == "__main__":
     main()

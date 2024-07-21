@@ -6,7 +6,7 @@ If you wanna play PLAYER VS. PLAYER, set player_two var to True on line 42 of ma
 
 Possible future improvements:
 UI improvements:
--Menu to select AI/Human
+-Menu to select AI/Human (Done)
 -Flip board options (display from black perspective)
 
 Engine improvements:
